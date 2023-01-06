@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BrowserExec</title>
+  </head>
+  <body>
+    <h1>Ready to execute javascript!</h1>
+    <h2>Websocket status: <span id="status"></span></h2>
+    <script>
+      const status = document.getElementById('status');
+
+      const socket = new WebSocket(`ws://${window.location.host}`);
+      socket.addEventListener('open', (event) => {
+        status.innerText = 'open';
+        socket.send(JSON.stringify({ event: 'connected' }));
+      });
+      socket.addEventListener('close', (event) => {
+        status.innerText = 'close';
+      });
+      socket.addEventListener('error', (event) => {
+        status.innerText = 'error';
+      });
+      socket.addEventListener('message', (event) => {
+        const data = JSON.parse(event.data);
+        console.log(data.exec);
+        let error, res;
+        try {
+          res = eval(data.exec);
+        } catch (e) {
+          error = e;
+        }
+        console.log(res);
+        socket.send(
+          JSON.stringify({
+            event: 'result',
+            result: res || null,
+            error: error || null,
+            id: data.id,
+          })
+        );
+      });
+    </script>
+  </body>
+</html>
